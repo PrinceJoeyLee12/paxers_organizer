@@ -17,6 +17,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
+import { useMediaQuery } from '@material-ui/core';
 
 const drawerWidth = 240;
 
@@ -67,6 +68,9 @@ const useStyles = makeStyles(theme => ({
     [theme.breakpoints.up('sm')]: {
       width: theme.spacing(9) + 1,
     },
+    [theme.breakpoints.down('xs')]: {
+      width: theme.spacing(0),
+    },
   },
   toolbar: {
     display: 'flex',
@@ -85,6 +89,7 @@ const useStyles = makeStyles(theme => ({
 export default function MiniDrawer({ children }) {
   const classes = useStyles();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('xs'));
   const [open, setOpen] = React.useState(false);
 
   const handleDrawerOpen = () => {
@@ -121,10 +126,13 @@ export default function MiniDrawer({ children }) {
       </AppBar>
       <Drawer
         variant='permanent'
-        className={clsx(classes.drawer, {
-          [classes.drawerOpen]: open,
-          [classes.drawerClose]: !open,
-        })}
+        className={clsx(
+          { [classes.drawer]: !isMobile },
+          {
+            [classes.drawerOpen]: open && !isMobile,
+            [classes.drawerClose]: !open && !isMobile,
+          },
+        )}
         classes={{
           paper: clsx({
             [classes.drawerOpen]: open,

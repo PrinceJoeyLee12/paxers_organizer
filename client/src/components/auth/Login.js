@@ -9,6 +9,8 @@ import {
   Container,
   Avatar,
   makeStyles,
+  useMediaQuery,
+  useTheme,
 } from '@material-ui/core';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -36,6 +38,9 @@ const useStyles = makeStyles(theme => ({
   end: {
     textAlign: 'end',
   },
+  start: {
+    textAlign: 'start',
+  },
   avatar: {
     margin: theme.spacing(1),
     backgroundColor: theme.palette.secondary.main,
@@ -51,6 +56,9 @@ const LoginValidationSchema = Yup.object().shape({
 
 const Login = () => {
   const classes = useStyles();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('xs'));
+
   return (
     <Fragment>
       <ToastContainer />
@@ -143,7 +151,7 @@ const Login = () => {
                 direction='row'
                 justify='space-between'
                 alignItems='center'>
-                <Grid item xs={6} className={classes.Links}>
+                <Grid item xs={12} sm={6} className={classes.Links}>
                   <Link
                     to='/forgot-password'
                     style={{ textDecoration: 'none' }}>
@@ -154,8 +162,12 @@ const Login = () => {
                 </Grid>
                 <Grid
                   item
-                  xs={6}
-                  className={classnames(classes.Links, classes.end)}>
+                  xs={12}
+                  sm={6}
+                  className={classnames(
+                    classes.Links,
+                    isMobile ? classes.start : classes.end,
+                  )}>
                   <Link to='/register' style={{ textDecoration: 'none' }}>
                     <Typography color='primary' variant='body1'>
                       Register Here
