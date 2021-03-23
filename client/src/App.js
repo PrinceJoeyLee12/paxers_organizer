@@ -1,8 +1,9 @@
 import React, { Fragment } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import ApolloClient from 'apollo-boost';
 import { ApolloProvider } from 'react-apollo';
 import Routes from './components/routing/Routes';
+import Navbar from './components/layouts/Navbar.main';
 
 import './App.css';
 
@@ -15,11 +16,13 @@ function App() {
     <div className='App'>
       <ApolloProvider client={client}>
         <Router>
-          <Fragment>
-            <Switch>
-              <Route component={Routes} />
-            </Switch>
-          </Fragment>
+          <Navbar>
+            <Fragment>
+              <Switch>
+                <Route component={Routes} />
+              </Switch>
+            </Fragment>
+          </Navbar>
         </Router>
       </ApolloProvider>
     </div>

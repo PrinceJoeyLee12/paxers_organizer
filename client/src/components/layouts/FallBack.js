@@ -4,7 +4,7 @@ import { CircularProgress, makeStyles } from '@material-ui/core';
 const useStyles = makeStyles(theme => ({
   loading: {
     paddingTop: '50px',
-    margin: 'auto',
+    margin: '50%',
   },
 }));
 

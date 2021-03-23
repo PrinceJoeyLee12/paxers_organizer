@@ -8,7 +8,7 @@ const ForgotPassword = React.lazy(() => import('./ForgotPassword'));
 const Register = React.lazy(() => import('./Register'));
 const ResetPassword = React.lazy(() => import('./ResetPassword'));
 
-const AuthLanding = ({ match }) => {
+const AuthLandingPage = ({ match }) => {
   return (
     <Fragment>
       <Suspense fallback={<FallBack />}>
@@ -26,4 +26,4 @@ const AuthLanding = ({ match }) => {
   );
 };
 
-export default AuthLanding;
+export default AuthLandingPage;
