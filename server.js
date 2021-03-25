@@ -16,6 +16,10 @@ connectDB();
 
 const app = express();
 
+//Initialize Middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
 //allow cross origin
 if (process.env.NODE_ENV === 'development') {
   app.use(cors({ origin: 'http://localhost:5000' }));
@@ -31,26 +35,7 @@ app.use(
   }),
 );
 
-app.get('/api/test/:userId/:transactionId', async (req, res) => {
-  try {
-    const { userId, transactionId } = req.params;
-    // const Registrant = require('./models/Registrants');
-    const Registrant = mongoose.connections[1].model(
-      'registrants',
-      require('./models/Registrant'),
-    );
-
-    Registrant.find({ userId, transactionId })
-      .then(data => {
-        res.json(data);
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  } catch (err) {
-    console.error.bind(err, 'Error is here');
-  }
-});
+app.use('/api', require('./router/api'));
 
 const PORT = process.env.PORT || 5000;
 

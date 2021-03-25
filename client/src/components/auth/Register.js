@@ -1,6 +1,12 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+
+//actions
+import { register } from '../../actions/auth';
+
 import {
   Grid,
   Button,
@@ -9,14 +15,17 @@ import {
   Container,
   Avatar,
   makeStyles,
+  CircularProgress,
 } from '@material-ui/core';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classnames from 'classnames';
-import { Form, TextField } from './FormElements';
+import { Form, TextField } from '../utils/FormElements';
 
 //icons
 import { UserPlus as UserPlusIcon } from 'react-feather';
+//material ui colors
+import { green } from '@material-ui/core/colors';
 
 //Page Styles
 const useStyles = makeStyles(theme => ({
@@ -40,6 +49,14 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(1),
     backgroundColor: theme.palette.secondary.main,
   },
+  buttonProgress: {
+    color: green[500],
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -12,
+    marginLeft: -12,
+  },
 }));
 
 const RegisterValidationSchema = Yup.object().shape({
@@ -59,8 +76,18 @@ const RegisterValidationSchema = Yup.object().shape({
     .required('Confirm Password Is Required'),
 });
 
-const Register = () => {
+const Register = ({ register }) => {
   const classes = useStyles();
+  const [submitted, setSubmitted] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const response = (msg, status) => {
+    if (status !== 200) {
+      toast.error(msg);
+      setSuccess(false);
+    } else setSuccess(true);
+    setSubmitted(!submitted);
+  };
   return (
     <Fragment>
       <ToastContainer />
@@ -91,10 +118,7 @@ const Register = () => {
                 }}
                 validationSchema={RegisterValidationSchema}
                 onSubmit={(values, { setSubmitting }) => {
-                  setTimeout(() => {
-                    alert(JSON.stringify(values, null, 2));
-                    setSubmitting(false);
-                  }, 400);
+                  register(values, response);
                 }}>
                 {({
                   values,
@@ -177,8 +201,18 @@ const Register = () => {
                           fullWidth
                           variant='contained'
                           onClick={handleSubmit}
-                          disabled={isSubmitting || !isValid}>
-                          Submit
+                          disabled={(isSubmitting || !isValid) && !submitted}>
+                          {submitted && success
+                            ? 'Redirecting...'
+                            : isSubmitting && !submitted
+                            ? 'Please wait...'
+                            : 'Submit'}
+                          {isSubmitting && !submitted && (
+                            <CircularProgress
+                              size={24}
+                              className={classes.buttonProgress}
+                            />
+                          )}
                         </Button>
                       </Grid>
                     </Grid>
@@ -210,4 +244,8 @@ const Register = () => {
   );
 };
 
-export default Register;
+Register.propTypes = {
+  login: PropTypes.func,
+};
+
+export default connect(null, { register })(Register);

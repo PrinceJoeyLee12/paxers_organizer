@@ -1,6 +1,9 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
+
 import {
   Grid,
   Button,
@@ -11,14 +14,21 @@ import {
   makeStyles,
   useMediaQuery,
   useTheme,
+  CircularProgress,
 } from '@material-ui/core';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classnames from 'classnames';
-import { Form, TextField } from './FormElements';
+import { Form, TextField } from '../utils/FormElements';
 
 //icons
 import AccountCircleOutlined from '@material-ui/icons/AccountCircleOutlined';
+
+//actions
+import { login } from '../../actions/auth';
+
+//material ui colors
+import { green } from '@material-ui/core/colors';
 
 //Page Styles
 const useStyles = makeStyles(theme => ({
@@ -45,6 +55,14 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(1),
     backgroundColor: theme.palette.secondary.main,
   },
+  buttonProgress: {
+    color: green[500],
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -12,
+    marginLeft: -12,
+  },
 }));
 
 const LoginValidationSchema = Yup.object().shape({
@@ -54,11 +72,30 @@ const LoginValidationSchema = Yup.object().shape({
   password: Yup.string().required('Password field is required'),
 });
 
-const Login = () => {
+const Login = ({ login }) => {
   const classes = useStyles();
   const theme = useTheme();
+  const [apiErrors, setApiErrors] = useState({});
   const isMobile = useMediaQuery(theme.breakpoints.down('xs'));
+  const [submitted, setSubmitted] = useState(false);
+  const [success, setSuccess] = useState(false);
 
+  const handleResponse = (msg, status, errors) => {
+    console.log(errors);
+    errors && Object.keys(errors).length > 0
+      ? setApiErrors(errors)
+      : setApiErrors({});
+    console.log(apiErrors);
+    if (status !== 200) {
+      if (Object.keys(errors).length === 0) toast.error(msg);
+      setSuccess(false);
+    } else setSuccess(true);
+    setSubmitted(!submitted);
+  };
+
+  React.useEffect(() => {
+    console.log(apiErrors);
+  }, [apiErrors]);
   return (
     <Fragment>
       <ToastContainer />
@@ -82,11 +119,15 @@ const Login = () => {
               <Formik
                 initialValues={{ email: '', password: '' }}
                 validationSchema={LoginValidationSchema}
-                onSubmit={(values, { setSubmitting }) => {
-                  setTimeout(() => {
-                    alert(JSON.stringify(values, null, 2));
+                onSubmit={(values, { setSubmitting, setErrors }) => {
+                  setApiErrors({});
+                  setErrors({});
+                  login(values, handleResponse);
+                  if (Object.keys(apiErrors).length > 0) {
+                    setErrors(apiErrors);
+                    setSuccess(false);
                     setSubmitting(false);
-                  }, 400);
+                  }
                 }}>
                 {({
                   values,
@@ -138,8 +179,18 @@ const Login = () => {
                           fullWidth
                           variant='contained'
                           onClick={handleSubmit}
-                          disabled={isSubmitting || !isValid}>
-                          Submit
+                          disabled={(isSubmitting || !isValid) && !submitted}>
+                          {submitted && success
+                            ? 'Redirecting...'
+                            : isSubmitting && !submitted
+                            ? 'Please wait...'
+                            : 'Submit'}
+                          {isSubmitting && !submitted && (
+                            <CircularProgress
+                              size={24}
+                              className={classes.buttonProgress}
+                            />
+                          )}
                         </Button>
                       </Grid>
                     </Grid>
@@ -156,7 +207,7 @@ const Login = () => {
                     to='/forgot-password'
                     style={{ textDecoration: 'none' }}>
                     <Typography color='primary' variant='body1'>
-                      Forgot Password ?{' '}
+                      Forgot Password ?
                     </Typography>
                   </Link>
                 </Grid>
@@ -183,4 +234,8 @@ const Login = () => {
   );
 };
 
-export default Login;
+Login.propTypes = {
+  login: PropTypes.func,
+};
+
+export default connect(null, { login })(Login);

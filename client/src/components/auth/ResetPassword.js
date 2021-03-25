@@ -13,7 +13,7 @@ import {
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classnames from 'classnames';
-import { Form, TextField } from './FormElements';
+import { Form, TextField } from '../utils/FormElements';
 
 //icons
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';

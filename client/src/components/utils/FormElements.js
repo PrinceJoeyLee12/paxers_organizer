@@ -4,7 +4,7 @@ import { TextField as CustomTextField } from 'formik-material-ui';
 import { InputAdornment, IconButton } from '@material-ui/core';
 
 //icons
-import AccountCircleOutlined from '@material-ui/icons/AccountCircleOutlined';
+import MailOutlineOutlinedIcon from '@material-ui/icons/MailOutlineOutlined';
 import VisibilityOutlined from '@material-ui/icons/VisibilityOutlined';
 import VisibilityOffOutlined from '@material-ui/icons/VisibilityOffOutlined';
 
@@ -14,6 +14,7 @@ function MaterialUIFormikTextField(props) {
   );
 }
 
+//Email Element
 function MaterialUIFormikTextFieldEmail(props) {
   return (
     <CustomTextField
@@ -22,7 +23,7 @@ function MaterialUIFormikTextFieldEmail(props) {
       InputProps={{
         endAdornment: (
           <InputAdornment position='start'>
-            <AccountCircleOutlined />
+            <MailOutlineOutlinedIcon />
           </InputAdornment>
         ),
       }}
@@ -31,6 +32,7 @@ function MaterialUIFormikTextFieldEmail(props) {
   );
 }
 
+// Password Element
 function MaterialUIFormikTextFieldPassword(props) {
   const [type, setType] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +73,7 @@ function MaterialUIFormikTextFieldPassword(props) {
   );
 }
 
+//Form Wrapper Element
 export function Form(props) {
   return (
     <Formik {...props}>
@@ -81,6 +84,7 @@ export function Form(props) {
   );
 }
 
+//TextField Element
 export function TextField(props) {
   const { name, label, type, ...rest } = props;
 
