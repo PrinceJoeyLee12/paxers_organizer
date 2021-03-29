@@ -1,6 +1,8 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classnames from 'classnames';
@@ -17,9 +19,14 @@ import {
   List,
   ListItem,
   Divider,
+  CircularProgress,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import MailOutlineIcon from '@material-ui/icons/MailOutline';
+import { forgotPassword } from '../../actions/auth';
+
+//material ui colors
+import { green } from '@material-ui/core/colors';
 
 //Custom Styling
 
@@ -52,6 +59,14 @@ const useStyles = makeStyles(theme => ({
   end: {
     textAlign: 'end',
   },
+  buttonProgress: {
+    color: green[500],
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -12,
+    marginLeft: -12,
+  },
 }));
 
 const ForgotPasswordValidationSchema = Yup.object().shape({
@@ -60,8 +75,23 @@ const ForgotPasswordValidationSchema = Yup.object().shape({
     .required('Email field is required'),
 });
 
-const ForgetPassword = () => {
+const ForgetPassword = ({ match, forgotPassword }) => {
   const classes = useStyles();
+  const [apiErrors, setApiErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleResponse = (msg, status, errors) => {
+    errors && Object.keys(errors).length > 0
+      ? setApiErrors(errors)
+      : setApiErrors({});
+    if (status !== 200) {
+      if (!errors || Object.keys(errors).length === 0) toast.error(msg);
+      setSuccess(false);
+    } else setSuccess(true);
+    setSubmitted(true);
+  };
+
   return (
     <Fragment>
       <ToastContainer />
@@ -108,11 +138,13 @@ const ForgetPassword = () => {
               <Formik
                 initialValues={{ email: '' }}
                 validationSchema={ForgotPasswordValidationSchema}
-                onSubmit={(values, { setSubmitting }) => {
-                  setTimeout(() => {
-                    alert(JSON.stringify(values, null, 2));
-                    setSubmitting(false);
-                  }, 400);
+                onSubmit={(values, { setErrors }) => {
+                  if (!success) {
+                    setApiErrors({});
+                    setErrors({});
+                    setSubmitted(false);
+                    forgotPassword(values, handleResponse);
+                  }
                 }}>
                 {({
                   values,
@@ -137,8 +169,8 @@ const ForgetPassword = () => {
                           fullWidth
                           autoFocus
                           value={values.email}
-                          error={errors.email ? true : false}
-                          helperText={errors.email}
+                          error={errors.email || apiErrors.email ? true : false}
+                          helperText={errors.email || apiErrors.email}
                           name='email'
                           label='Email'
                           type='email'
@@ -152,8 +184,18 @@ const ForgetPassword = () => {
                           fullWidth
                           variant='contained'
                           onClick={handleSubmit}
-                          disabled={isSubmitting || !isValid}>
-                          Send Me A Link
+                          disabled={(isSubmitting || !isValid) && !submitted}>
+                          {submitted && success
+                            ? 'Link Sent! Please Check'
+                            : isSubmitting && !submitted
+                            ? 'Please wait...'
+                            : 'Send Me A Link'}
+                          {isSubmitting && !submitted && (
+                            <CircularProgress
+                              size={24}
+                              className={classes.buttonProgress}
+                            />
+                          )}
                         </Button>
                       </Grid>
                     </Grid>
@@ -185,4 +227,8 @@ const ForgetPassword = () => {
   );
 };
 
-export default ForgetPassword;
+ForgetPassword.propTypes = {
+  forgotPassword: PropTypes.func,
+};
+
+export default connect(null, { forgotPassword })(ForgetPassword);

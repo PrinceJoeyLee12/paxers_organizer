@@ -81,21 +81,16 @@ const Login = ({ login }) => {
   const [success, setSuccess] = useState(false);
 
   const handleResponse = (msg, status, errors) => {
-    console.log(errors);
     errors && Object.keys(errors).length > 0
       ? setApiErrors(errors)
       : setApiErrors({});
-    console.log(apiErrors);
     if (status !== 200) {
-      if (Object.keys(errors).length === 0) toast.error(msg);
+      if (!errors || Object.keys(errors).length === 0) toast.error(msg);
       setSuccess(false);
     } else setSuccess(true);
-    setSubmitted(!submitted);
+    setSubmitted(true);
   };
 
-  React.useEffect(() => {
-    console.log(apiErrors);
-  }, [apiErrors]);
   return (
     <Fragment>
       <ToastContainer />
@@ -122,12 +117,8 @@ const Login = ({ login }) => {
                 onSubmit={(values, { setSubmitting, setErrors }) => {
                   setApiErrors({});
                   setErrors({});
+                  setSubmitted(false);
                   login(values, handleResponse);
-                  if (Object.keys(apiErrors).length > 0) {
-                    setErrors(apiErrors);
-                    setSuccess(false);
-                    setSubmitting(false);
-                  }
                 }}>
                 {({
                   values,
@@ -152,8 +143,8 @@ const Login = ({ login }) => {
                           fullWidth
                           autoFocus
                           value={values.email}
-                          error={errors.email ? true : false}
-                          helperText={errors.email}
+                          error={errors.email || apiErrors.email ? true : false}
+                          helperText={errors.email || apiErrors.email}
                           name='email'
                           label='Email'
                           type='email'
@@ -167,8 +158,10 @@ const Login = ({ login }) => {
                           name='password'
                           label='Password'
                           type='password'
-                          error={errors.password ? true : false}
-                          helperText={errors.password}
+                          error={
+                            errors.password || apiErrors.password ? true : false
+                          }
+                          helperText={errors.password || apiErrors.password}
                           onChange={handleChange}
                         />
                       </Grid>
@@ -179,7 +172,10 @@ const Login = ({ login }) => {
                           fullWidth
                           variant='contained'
                           onClick={handleSubmit}
-                          disabled={(isSubmitting || !isValid) && !submitted}>
+                          disabled={
+                            (isSubmitting || !isValid) &&
+                            (!submitted || success)
+                          }>
                           {submitted && success
                             ? 'Redirecting...'
                             : isSubmitting && !submitted

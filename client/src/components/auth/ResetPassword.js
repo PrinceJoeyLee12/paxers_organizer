@@ -1,6 +1,9 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState, useRef, useEffect } from 'react';
+import { withRouter } from 'react-router';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import {
   Grid,
   Button,
@@ -9,11 +12,18 @@ import {
   Container,
   Avatar,
   makeStyles,
+  CircularProgress,
 } from '@material-ui/core';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classnames from 'classnames';
 import { Form, TextField } from '../utils/FormElements';
+
+//material ui colors
+import { green } from '@material-ui/core/colors';
+
+//actions
+import { resetPassword } from '../../actions/auth';
 
 //icons
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -40,6 +50,14 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(1),
     backgroundColor: theme.palette.secondary.main,
   },
+  buttonProgress: {
+    color: green[500],
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -12,
+    marginLeft: -12,
+  },
 }));
 
 const RegisterValidationSchema = Yup.object().shape({
@@ -54,8 +72,32 @@ const RegisterValidationSchema = Yup.object().shape({
     .required('Password field is required'),
 });
 
-const Register = () => {
+const ResetPassword = ({ resetPassword, history, match }) => {
   const classes = useStyles();
+  const timer = useRef();
+  const [submitted, setSubmitted] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleResponse = (msg, status) => {
+    toast[`${status === 200 ? 'success' : 'error'}`](msg);
+    if (status !== 200) setSuccess(false);
+    else {
+      setSuccess(true);
+      toast("You'll be redirected to Login Page");
+      timer.current = window.setTimeout(() => {
+        history.push('/login');
+      }, 5000);
+    }
+    setSubmitted(true);
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(timer.current);
+    };
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <Fragment>
       <ToastContainer />
@@ -82,11 +124,14 @@ const Register = () => {
                   passwordConfirm: '',
                 }}
                 validationSchema={RegisterValidationSchema}
-                onSubmit={(values, { setSubmitting }) => {
-                  setTimeout(() => {
-                    alert(JSON.stringify(values, null, 2));
-                    setSubmitting(false);
-                  }, 400);
+                onSubmit={(values, { setErrors }) => {
+                  if (!success) {
+                    setErrors({});
+                    setSubmitted(false);
+                    //add token to the values object
+                    values.token = match.params.token;
+                    resetPassword(values, handleResponse);
+                  }
                 }}>
                 {({
                   values,
@@ -135,8 +180,18 @@ const Register = () => {
                           fullWidth
                           variant='contained'
                           onClick={handleSubmit}
-                          disabled={isSubmitting || !isValid}>
-                          Submit
+                          disabled={(isSubmitting || !isValid) && !submitted}>
+                          {submitted && success
+                            ? 'Successfully Changed'
+                            : isSubmitting && !submitted
+                            ? 'Please wait...'
+                            : 'Submit'}
+                          {isSubmitting && !submitted && (
+                            <CircularProgress
+                              size={24}
+                              className={classes.buttonProgress}
+                            />
+                          )}
                         </Button>
                       </Grid>
                     </Grid>
@@ -168,4 +223,8 @@ const Register = () => {
   );
 };
 
-export default Register;
+ResetPassword.propTypes = {
+  resetPassword: PropTypes.func,
+};
+
+export default connect(null, { resetPassword })(withRouter(ResetPassword));

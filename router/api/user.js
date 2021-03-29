@@ -14,9 +14,10 @@ router.post('/register', async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user)
-      return res
-        .status(400)
-        .json({ msg: 'You already have an account. Please Login' });
+      return res.status(400).json({
+        msg: '',
+        errors: { email: 'You already have an account. Please Login' },
+      });
 
     user = new User({
       firstName,
@@ -24,6 +25,7 @@ router.post('/register', async (req, res) => {
       email,
       password,
     });
+
     // Encrypt Password
     const salt = bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
@@ -41,14 +43,15 @@ router.post('/register', async (req, res) => {
       { expiresIn: process.env.TOKEN_FOR_AUTH_EXPIRATION },
       (err, token) => {
         if (err)
-          return res
-            .status(500)
-            .json({ msg: 'Cannot generate token as of the moment' });
+          return res.status(500).json({
+            msg: 'Cannot generate token as of the moment',
+            errors: {},
+          });
         res.json({ token });
       },
     );
   } catch (err) {}
-  res.status(200).json({ msg: 'Login Success' });
+  res.status(200).json({ msg: 'Login Success', errors: {} });
 });
 
 module.exports = router;

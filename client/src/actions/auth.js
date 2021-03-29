@@ -1,5 +1,4 @@
 import api from '../utils/api';
-import { toast } from 'react-toastify';
 import {
   AUTH_ERROR,
   REGISTER_SUCCESS,
@@ -46,14 +45,18 @@ export const googleSignIn = setResponse => async dispatch => {
 export const register = (formData, setResponse) => async dispatch => {
   try {
     const res = await api.post('/user/register', formData);
-    setResponse('', res.status);
+    setResponse('', res.status, {});
     dispatch({
       type: REGISTER_SUCCESS,
       payload: res.data,
     });
     dispatch(loadUser());
   } catch (err) {
-    setResponse(err.response.data.msg, err.response.status);
+    setResponse(
+      err.response.data.msg,
+      err.response.status,
+      err.response.data.errors,
+    );
   }
 };
 
@@ -81,36 +84,36 @@ export const login = (formData, setResponse) => async dispatch => {
 // @route    POST api/auth/forgotPassword
 // @desc     Forgot Password
 // @access   Public
-export const forgotPassword = (
-  textChangeAfterSubmit,
-  setError,
-  email,
-) => async dispatch => {
+export const forgotPassword = (formData, setResponse) => async dispatch => {
   try {
-    textChangeAfterSubmit('Sending...');
-    const res = await api.post('/auth/forgotpassword', { email });
-    textChangeAfterSubmit('Link Sent');
-    console.log(res);
-    toast.success(res.data.msg);
-  } catch (err) {}
+    const res = await api.post('/auth/forgot-password', formData);
+    setResponse(
+      'We already sent you an link, Please check your inbox.',
+      res.status,
+      {},
+    );
+  } catch (err) {
+    setResponse(
+      err.response.data.msg,
+      err.response.status,
+      err.response.data.errors,
+    );
+  }
 };
 
 // @route    POST api/auth/reset-password
 // @desc     Reset Password
 // @access   Private
-export const resetPassword = (
-  formData,
-  textChangeAfterSubmit,
-  setErrors,
-  history,
-) => async dispatch => {
+export const resetPassword = (formData, setResponse) => async dispatch => {
   try {
-    textChangeAfterSubmit('Resetting...');
     const res = await api.post('/auth/reset-password', formData);
-    textChangeAfterSubmit('Success');
-    toast.success(res.data.msg);
-    history.push('/login');
-  } catch (err) {}
+    setResponse(
+      'You successfully reset your password try to login.',
+      res.status,
+    );
+  } catch (err) {
+    setResponse(err.response.data.msg, err.response.status);
+  }
 };
 
 export const logout = () => async dispatch => {

@@ -78,15 +78,20 @@ const RegisterValidationSchema = Yup.object().shape({
 
 const Register = ({ register }) => {
   const classes = useStyles();
+  const [apiErrors, setApiErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const response = (msg, status) => {
+  const response = (msg, status, errors) => {
+    console.log(errors);
+    errors && Object.keys(errors).length > 0
+      ? setApiErrors(errors)
+      : setApiErrors({});
     if (status !== 200) {
-      toast.error(msg);
+      if (!errors || Object.keys(errors).length === 0) toast.error(msg);
       setSuccess(false);
     } else setSuccess(true);
-    setSubmitted(!submitted);
+    setSubmitted(true);
   };
   return (
     <Fragment>
@@ -117,7 +122,10 @@ const Register = ({ register }) => {
                   lastName: '',
                 }}
                 validationSchema={RegisterValidationSchema}
-                onSubmit={(values, { setSubmitting }) => {
+                onSubmit={(values, { setSubmitting, setErrors }) => {
+                  setApiErrors({});
+                  setErrors({});
+                  setSubmitted(false);
                   register(values, response);
                 }}>
                 {({
@@ -164,8 +172,8 @@ const Register = ({ register }) => {
                       <Grid item xs={12}>
                         <TextField
                           value={values.email}
-                          error={errors.email ? true : false}
-                          helperText={errors.email}
+                          error={errors.email || apiErrors.email ? true : false}
+                          helperText={errors.email || apiErrors.email}
                           name='email'
                           label='Email'
                           type='email'
