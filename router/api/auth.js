@@ -90,12 +90,10 @@ router.post('/forgot-password', async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user)
-      return res
-        .status(400)
-        .json({
-          msg: '',
-          errors: { email: 'Email not found on our database!' },
-        });
+      return res.status(400).json({
+        msg: '',
+        errors: { email: 'Email not found on our database!' },
+      });
 
     try {
       const payload = {
@@ -110,12 +108,10 @@ router.post('/forgot-password', async (req, res) => {
         { expiresIn: '10m' },
         (err, token) => {
           if (err) {
-            return res
-              .status(401)
-              .json({
-                msg: 'Cannot generate Token as of the moment ',
-                errors: {},
-              });
+            return res.status(401).json({
+              msg: 'Cannot generate Token as of the moment ',
+              errors: {},
+            });
           } else {
             var transporter = nodemailer.createTransport({
               service: 'gmail',

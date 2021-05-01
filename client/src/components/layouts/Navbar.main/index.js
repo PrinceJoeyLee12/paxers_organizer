@@ -1,23 +1,34 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import clsx from 'clsx';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+import { withRouter } from 'react-router';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import List from '@material-ui/core/List';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
-import IconButton from '@material-ui/core/IconButton';
+import {
+  Drawer,
+  AppBar,
+  Toolbar,
+  CssBaseline,
+  Typography,
+  Divider,
+  IconButton,
+  useMediaQuery,
+  List,
+} from '@material-ui/core';
+
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
-import { useMediaQuery } from '@material-ui/core';
+
+//Actions
+import {
+  getGuestMenuItems,
+  getAuthMenuItems,
+} from '../../../actions/menuItems';
+
+//Menu Items
+import AppbarMenus from './appbarMenus';
+import SidebarMenus from './SidebarMenus';
 
 const drawerWidth = 240;
 
@@ -84,97 +95,110 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     padding: theme.spacing(3),
   },
+  logo: {
+    flexGrow: 1,
+  },
 }));
 
-export default function MiniDrawer({ children }) {
+const Menus = ({
+  children,
+  menuItems,
+  getGuestMenuItems,
+  getAuthMenuItems,
+}) => {
   const classes = useStyles();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('xs'));
   const [open, setOpen] = React.useState(false);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
+  const handleDrawerToggle = () => {
+    setOpen(!open);
   };
 
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <AppBar
-        position='fixed'
-        className={clsx(classes.appBar, {
-          [classes.appBarShift]: open,
-        })}>
-        <Toolbar>
-          <IconButton
-            color='inherit'
-            aria-label='open drawer'
-            onClick={handleDrawerOpen}
-            edge='start'
-            className={clsx(classes.menuButton, {
-              [classes.hide]: open,
-            })}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant='h6' noWrap>
-            Mini variant drawer
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        variant='permanent'
-        className={clsx(
-          { [classes.drawer]: !isMobile },
-          {
-            [classes.drawerOpen]: open && !isMobile,
-            [classes.drawerClose]: !open && !isMobile,
-          },
-        )}
-        classes={{
-          paper: clsx({
-            [classes.drawerOpen]: open,
-            [classes.drawerClose]: !open,
-          }),
-        }}>
-        <div className={classes.toolbar}>
-          <IconButton onClick={handleDrawerClose}>
-            {theme.direction === 'rtl' ? (
-              <ChevronRightIcon />
-            ) : (
-              <ChevronLeftIcon />
-            )}
-          </IconButton>
-        </div>
-        <Divider />
-        <List>
-          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          {['All mail', 'Trash', 'Spam'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
-      <main className={classes.content}>
-        <div className={classes.toolbar} />
-        {children}
-      </main>
+      <Suspense fallback='Loading....'>
+        <AppBar
+          position='fixed'
+          className={clsx(classes.appBar, {
+            [classes.appBarShift]: open,
+          })}>
+          <Toolbar>
+            <IconButton
+              color='inherit'
+              aria-label='open drawer'
+              onClick={handleDrawerToggle}
+              edge='start'
+              className={clsx(classes.menuButton, {
+                [classes.hide]: open,
+              })}>
+              <MenuIcon />
+            </IconButton>
+            <Typography variant='h6' noWrap className={classes.logo}>
+              {isMobile && open ? 'L' : 'Logo here'}
+            </Typography>
+            <AppbarMenus menuIsOpen={open} />
+          </Toolbar>
+        </AppBar>
+        <Drawer
+          variant='permanent'
+          className={clsx(
+            { [classes.drawer]: !isMobile },
+            {
+              [classes.drawerOpen]: open && !isMobile,
+              [classes.drawerClose]: !open && !isMobile,
+            },
+          )}
+          classes={{
+            paper: clsx({
+              [classes.drawerOpen]: open,
+              [classes.drawerClose]: !open,
+            }),
+          }}>
+          <div className={classes.toolbar}>
+            <IconButton onClick={handleDrawerToggle}>
+              {theme.direction === 'rtl' ? (
+                <ChevronRightIcon />
+              ) : (
+                <ChevronLeftIcon />
+              )}
+            </IconButton>
+          </div>
+          <Divider />
+          <List>
+            {menuItems.map((item, index) => (
+              <SidebarMenus
+                key={index}
+                href={item.href}
+                icon={item.icon}
+                title={item.title}
+                handleDrawerToggle={handleDrawerToggle}
+                drawerIsOpen={open}
+              />
+            ))}
+          </List>
+        </Drawer>
+        <main className={classes.content}>
+          <div className={classes.toolbar} />
+          {children}
+        </main>
+      </Suspense>
     </div>
   );
-}
+};
+
+Menus.propTypes = {
+  getGuestMenuItems: PropTypes.func,
+  getAuthMenuItems: PropTypes.func,
+  menuItems: PropTypes.array,
+};
+
+const mapStateToProps = state => ({
+  menuItems: state.menuItems,
+});
+
+export default connect(mapStateToProps, {
+  getGuestMenuItems,
+  getAuthMenuItems,
+})(withRouter(Menus));
