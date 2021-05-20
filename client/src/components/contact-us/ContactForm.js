@@ -1,7 +1,7 @@
-import React, { Fragment, useState } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import React, { Fragment, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import gql from 'graphql-tag';
+import { useMutation } from '@apollo/client';
 import { ToastContainer, toast } from 'react-toastify';
 
 import {
@@ -20,12 +20,6 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classnames from 'classnames';
 import { Form, TextField } from '../utils/FormElements';
-
-//components
-import DialogElementContent from './DialogElementContent';
-
-//actions
-import { sendConcern } from '../../actions/contact-us';
 
 //icons
 import HeadsetMicOutlinedIcon from '@material-ui/icons/HeadsetMicOutlined';
@@ -75,6 +69,35 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+//APOLLO
+const ADD_CONCERN = gql`
+  mutation (
+    $firstName: String!
+    $lastName: String!
+    $email: String!
+    $message: String!
+  ) {
+    addConcern(
+      record: {
+        firstName: $firstName
+        lastName: $lastName
+        email: $email
+        message: $message
+      }
+    ) {
+      recordId
+      record {
+        createAt
+        firstName
+        lastName
+        email
+        message
+      }
+    }
+  }
+`;
+
+//Form Validations
 const LoginValidationSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email')
@@ -87,7 +110,7 @@ const LoginValidationSchema = Yup.object().shape({
     .required('Message field is required'),
 });
 
-const ContactForm = ({ sendConcern, setDialogBox }) => {
+const ContactForm = ({ setDialogBox }) => {
   const classes = useStyles();
   const theme = useTheme();
   const [apiErrors, setApiErrors] = useState({});
@@ -95,23 +118,28 @@ const ContactForm = ({ sendConcern, setDialogBox }) => {
   const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleResponse = (msg, status, errors) => {
-    errors && Object.keys(errors).length > 0
-      ? setApiErrors(errors)
-      : setApiErrors({});
-    if (status !== 200) {
-      if (!errors || Object.keys(errors).length === 0) toast.error(msg);
-      setSuccess(false);
-    } else {
+  const [addConcern, { error, data }] = useMutation(ADD_CONCERN);
+
+  useEffect(() => {
+    if (data) {
+      console.log(data);
+      setSubmitted(true);
       setSuccess(true);
     }
-    setSubmitted(true);
-  };
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      console.log(error);
+      setSuccess(false);
+      setSubmitted(false);
+      toast.error(`There's an error on our side. Please try again later`);
+    }
+  }, [error]);
 
   return (
     <Fragment>
       <ToastContainer />
-      <DialogElementContent />
       <Container component='main' maxWidth='xs'>
         <CssBaseline />
         <div className={classes.paper}>
@@ -130,13 +158,19 @@ const ContactForm = ({ sendConcern, setDialogBox }) => {
             className={classes.form}>
             <Grid item xs={12}>
               <Formik
-                initialValues={{ email: '', password: '', message: '' }}
+                initialValues={{
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  password: '',
+                  message: '',
+                }}
                 validationSchema={LoginValidationSchema}
-                onSubmit={(values, { setSubmitting, setErrors }) => {
+                onSubmit={(values, { setErrors }) => {
                   setApiErrors({});
                   setErrors({});
                   setSubmitted(false);
-                  sendConcern(values, handleResponse);
+                  if (!submitted) addConcern({ variables: { ...values } });
                 }}>
                 {({
                   values,
@@ -214,16 +248,13 @@ const ContactForm = ({ sendConcern, setDialogBox }) => {
                           fullWidth
                           variant='contained'
                           onClick={handleSubmit}
-                          disabled={
-                            (isSubmitting || !isValid) &&
-                            (!submitted || success)
-                          }>
+                          disabled={(isSubmitting || !isValid) && !submitted}>
                           {submitted && success
                             ? 'Concern Submitted'
-                            : isSubmitting && !submitted
+                            : isSubmitting && isValid
                             ? 'Please wait...'
                             : 'Submit'}
-                          {isSubmitting && !submitted && (
+                          {isSubmitting && !success && (
                             <CircularProgress
                               size={24}
                               className={classes.buttonProgress}
@@ -270,8 +301,4 @@ const ContactForm = ({ sendConcern, setDialogBox }) => {
   );
 };
 
-ContactForm.propTypes = {
-  sendConcern: PropTypes.func,
-};
-
-export default connect(null, { sendConcern })(ContactForm);
+export default ContactForm;

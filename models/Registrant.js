@@ -20,8 +20,6 @@ const RegistrantSchema = new Schema({
 
 const Registrant = mongoose.model('registrants', RegistrantSchema);
 const RegistrantCompose = composeWithMongoose(
-  mongoose.connection
-    .useDb(process.env.USER_DATABASE)
-    .model('registrants', RegistrantSchema),
+  mongoose.model('registrants', RegistrantSchema),
 );
 module.exports = { Registrant, RegistrantCompose };

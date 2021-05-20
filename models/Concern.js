@@ -23,6 +23,7 @@ const ConcernSchema = new Schema({
   message: {
     type: String,
     required: true,
+    minLength: 20,
   },
   createAt: {
     type: Date,
@@ -32,9 +33,7 @@ const ConcernSchema = new Schema({
 
 const Concern = mongoose.model('concerns', ConcernSchema);
 const ConcernCompose = composeWithMongoose(
-  mongoose.connection
-    .useDb(process.env.USER_DATABASE)
-    .model('concerns', ConcernSchema),
+  mongoose.model('concerns', ConcernSchema),
 );
 
 module.exports = { Concern, ConcernCompose };

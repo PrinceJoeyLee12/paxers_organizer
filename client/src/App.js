@@ -1,7 +1,12 @@
 import React, { Fragment, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import ApolloClient from 'apollo-boost';
-import { ApolloProvider } from 'react-apollo';
+
+//Apollo
+// import ApolloClient from 'apollo-boost';
+// import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider } from '@apollo/client/react';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
 import Routes from './components/routing/Routes';
 import Navbar from './components/layouts/Navbar.main';
 
@@ -9,6 +14,7 @@ import Navbar from './components/layouts/Navbar.main';
 import { Provider } from 'react-redux';
 import store from './store';
 
+//Actions
 import setAuthToken from './utils/setAuthToken';
 import { loadUser } from './actions/auth';
 import { LOGOUT } from './actions/types';
@@ -16,8 +22,9 @@ import { LOGOUT } from './actions/types';
 import './App.css';
 import 'react-toastify/dist/ReactToastify.css';
 
-const client = new ApolloClient({
+export const client = new ApolloClient({
   uri: '/graphql',
+  cache: new InMemoryCache(),
 });
 
 function App() {
